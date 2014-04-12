@@ -21,6 +21,7 @@ def diagnose(dct):
 def check_moves(dct):
 	keys = dct.keys()
 	for key in keys:
+		print key
 		for value in dct[key]:
 			print bi_dict[value]
 
@@ -49,10 +50,12 @@ class RookMoves(object):
 		"""
 		def check_rof():
 			return ord(rank_or_file) if r_o_f == 'file' else rank_or_file
-		if op == 'pos':
-			return offset + check_rof()
-		else:
-			return offset - check_rof()
+		# if op == 'pos':
+		# 	return check_rof() + offset 
+		# else:
+		# 	return check_rof() - offset
+
+		return check_rof() +offset if op=='pos' else -offset
 		 
 		
 	def next_rank(self, op, rank_or_file, offset):
@@ -98,6 +101,7 @@ class RookMoves(object):
 		ret = {}
 		
 		for op,key in self.cycle:
+			print op
 			n_rank = self.next_rank(op, _rank, offset)
 			
 			n_file = self.next_file(op, _file, offset)
@@ -119,4 +123,4 @@ class RookMoves(object):
 r = RookMoves()
 
 
-check_moves(r.get_move(0, 1))
+check_moves(r.get_move(1, 1))
