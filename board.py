@@ -6,7 +6,7 @@ import array
 class Board(object):
 	def __get_algebraic_board_map(self):
 		board_file = list(map(chr,range(ord('a'),ord('h')+1)))
-		board_rank = list([ i for i in range(1,9)])
+		board_rank = range(1,9)
 
 		algebraic_board_map =  [ i for i in enumerate( [
 									"%s%s" %(r,f) for r,f in 
