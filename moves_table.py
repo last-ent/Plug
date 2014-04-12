@@ -19,21 +19,18 @@ def diagnose(dct):
 			print dct
 
 def check_moves(dct):
+	ret = []
 	keys = dct.keys()
 	for key in keys:
-		print key
-		for value in dct[key]:
-			print bi_dict[value]
+		ret.extend(map(bi_dict.get, dct[key]))
+	return ret
 
 
 class RookMoves(object):
 	def __init__(self):
 		self.square_indices = Board().get_bitboard()
 		self.square_notation = Board().get_bijective_algebraic_board()
-		self.cycle = [
-			('pos', 'forward'),
-			('neg', 'reverse')
-			]
+		
 
 	def within_limits(self,lower_limit, value, upper_limit):
 		return lower_limit <= value <= upper_limit
@@ -50,12 +47,14 @@ class RookMoves(object):
 		"""
 		def check_rof():
 			return ord(rank_or_file) if r_o_f == 'file' else rank_or_file
-		# if op == 'pos':
-		# 	return check_rof() + offset 
-		# else:
-		# 	return check_rof() - offset
 
-		return check_rof() +offset if op=='pos' else -offset
+		## Weird quirk, below line won't work. While in interpreter it works.
+		#return check_rof() +offset if op=='pos' else -offset
+
+		board_val = check_rof() 
+		mod_val =  +offset if op=='pos' else -offset
+		
+		return board_val + mod_val
 		 
 		
 	def next_rank(self, op, rank_or_file, offset):
@@ -99,9 +98,13 @@ class RookMoves(object):
 		_rank, _file = self.get_rank_file(sqr_algebraic)
 
 		ret = {}
+		self.cycle = [
+			('pos', 'forward'),
+			('neg', 'reverse')
+			]
 		
 		for op,key in self.cycle:
-			print op
+			
 			n_rank = self.next_rank(op, _rank, offset)
 			
 			n_file = self.next_file(op, _file, offset)
@@ -123,4 +126,5 @@ class RookMoves(object):
 r = RookMoves()
 
 
-check_moves(r.get_move(1, 1))
+
+
