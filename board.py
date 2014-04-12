@@ -1,11 +1,12 @@
 import string
 
 import itertools
+import array
 
 class Board(object):
 	def __get_algebraic_board_map(self):
-		board_rank = list(map(chr,range(ord('a'),ord('h')+1)))
-		board_file = [ i for i in range(1,9)]
+		board_rank = array.array('B', map(chr,range(ord('a'),ord('h')+1)))
+		board_file = array.array('B', [ i for i in range(1,9)])
 
 		algebraic_board_map =  [ i for i in enumerate( [
 									"%s%s" %(r,f) for r,f in 
@@ -13,7 +14,7 @@ class Board(object):
 										board_rank,
 										board_file
 										)]
-									,start=1)]
+									,start=0)]
 		return algebraic_board_map
 
 	def get_bijective_algebraic_board(self):
@@ -25,7 +26,7 @@ class Board(object):
 		return ret
 
 	def __get_bitboard(self):
-		return [0 for i in xrange(1,65)]
+		return array.array('B', [0 for i in xrange(1,65)])
 
 	def __get_pieces(self):
 		pieces = ['K','Q','N','R','B','P']
@@ -36,3 +37,5 @@ class Board(object):
 		pieces = self.__get_pieces()
 		pieces_board_dict = dict([(piece,self.__get_bitboard()) for piece in pieces])
 		return pieces_board_dict
+
+#print Board().get_pieces_bitboard_dict()
