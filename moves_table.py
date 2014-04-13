@@ -35,7 +35,6 @@ def check_moves(dct):
 		ret.extend(map(bi_dict.get, dct[key]))
 	return ret
 
-
 class RookMoves(object):
 	def __init__(self):
 		self.square_indices = Board().get_bitboard()
@@ -69,12 +68,14 @@ class RookMoves(object):
 		
 	def next_rank(self, op, rank_or_file, offset):
 		n_rank =  self.change_square(op,'rank', rank_or_file, offset)
-		return n_rank if self.within_limits(0,n_rank,8) else False
+		n_rank = n_rank if self.within_limits(0,n_rank,8) else False
+		return [n_rank]
 
 	def next_file(self, op, rank, offset):
 		f_lims = bounds_dict['file']
 		n_file = self.change_square(op, 'file',rank,offset)		
-		return chr(n_file) if self.within_limits(f_lims[0],n_file,f_lims[1]) else False
+		n_file =  chr(n_file) if self.within_limits(f_lims[0],n_file,f_lims[1]) else False
+		return [n_file]
 
 	def get_rank_file(self, square):
 		"""
@@ -98,6 +99,12 @@ class RookMoves(object):
 		
 	# 	return r_bool, f_bool
 
+	def next_rank_file(self, op, _rank, _file, offset):
+		n_ranks = list(self.next_rank(op, _rank, offset))
+		n_files = list(self.next_file(op, _file, offset))
+
+		return n_ranks, n_files
+
 	def set_moves(self, square, offset):
 		"""
 		This rule is unique to each piece.
@@ -114,18 +121,24 @@ class RookMoves(object):
 		
 		for op,key in self.cycle:
 			
-			n_rank = self.next_rank(op, _rank, offset)
+			# n_rank = self.next_rank(op, _rank, offset)
 			
-			n_file = self.next_file(op, _file, offset)
+			# n_file = self.next_file(op, _file, offset)
+
+			n_ranks, n_files = self.next_rank_file(op, _rank, _file, offset)
+
+			## NEEDS REFACTORING
 
 			ret[key] =[]
-			if n_rank:
-				n_rank_square = self.get_square(n_rank, _file) 
-				ret[key].append(self.square_notation[n_rank_square])
+			for n_rank in n_ranks:
+				if n_rank:
+					n_rank_square = self.get_square(n_rank, _file) 
+					ret[key].append(self.square_notation[n_rank_square])
 
-			if n_file:
-				n_file_square = self.get_square(_rank, n_file) 
-				ret[key].append(self.square_notation[n_file_square])
+			for n_file in n_files:
+				if n_file:
+					n_file_square = self.get_square(_rank, n_file) 
+					ret[key].append(self.square_notation[n_file_square])
 
 		self.move_dict = ret
 			
@@ -133,6 +146,15 @@ class RookMoves(object):
 			# 'n_file_square': n_file_square, 'n_rank_square' : n_rank_square, 'op': op, 'key': key}) #'r_bool' : rank_in_bounds, 'f_bool': file_in_bounds, 
 
 		#return ret
+
+	# def set_moves_dict(moves_dict, key, squares_dict ):
+	# 	keys = squares_dict.keys()
+	# 	for r_o_f in keys:
+	# 		n_squares = squares_dict[r_o_f]
+	# 		for square in n_squares:
+	# 			if square:
+	# 				square_alg = 
+
 
 	def get_flat_list(self):
 		dct = self.move_dict
@@ -165,11 +187,13 @@ class MapAllPieceMoves(object):
 		return self.dict 
 
 
-# r = MapAllPieceMoves(RookMoves())
-# import pprint
-# x = r.get_dict()[1]
-# x.sort()
-# pprint.pprint(x)
+
+r = MapAllPieceMoves(RookMoves())
+import pprint
+sq = 1
+x = r.get_dict()[sq]
+x.sort()
+pprint.pprint(x)
 
 
 # sq = 35
