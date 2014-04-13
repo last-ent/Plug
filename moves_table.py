@@ -143,6 +143,7 @@ class RookMoves(MovesClass):
 		n_file =  chr(n_file) if self.within_limits(f_lims[0],n_file,f_lims[1]) else False
 		return [n_file]
 
+
 class BishopMoves(MovesClass):
 	def change_square(self, op, _rank, _file, offset):
 		"""
