@@ -62,7 +62,6 @@ class MovesBase(object):
 		else:
 			return False
 
-
 	def next_moves(self, args_dict):
 		if args_dict['direction'] == 'reverse':
 				offset = -args_dict['offset']
@@ -100,7 +99,6 @@ class MovesBase(object):
 
 class RookMoves(MovesBase):
 	def rook_moves(self, args_dict, offset):
-
 		ret = []
 		_rank, _file = args_dict['rank'], args_dict['file']
 		
@@ -147,16 +145,56 @@ class QueenMoves(RookMoves, BishopMoves):
 
 class KingMoves(QueenMoves):
 	def king_moves(self, args_dict, offset):
-		self.queen_moves(args_dict, 1)
+		offset = 1 if offset > 0 else -1
+		king_moves = self.queen_moves(args_dict, offset)
+		return king_moves
 
 	piece_function = king_moves
 
-class 
+class KnightMoves(RookMoves):
+	def knight_moves(self, args_dict, offset):
+		ret = []
+		offset = 2 if offset > 0 else -2
+		_rank, _file = args_dict['rank'], args_dict['file'] # b2
 
-r =  QueenMoves()
-r.set_moves('b2',1)
+		rook_moves = self.rook_moves(args_dict, offset)
+		rook_moves = [self.get_rank_file(sq) for sq in rook_moves]
 
-print r.moves_list
+		#[ ( _rank, _file ) ][0]
+		
+		if not rook_moves:
+			return []
+		t_files = [r for r in rook_moves if r[0]==_rank][0] # 2, d
+		t_ranks = [f for f in rook_moves if f[1]==_file][0] # 4, b
+		
+		# Knight moves along file, varying rank.
+		#print t_ranks # 2, d -> 1, d & 3, d
+		print t_ranks
+		__r, __f = t_ranks
+		_f = [[__r, chr(ord(__f) + 1)], [__r, chr(ord(__f) -1)]]
+		
+		
+		# Knight moves along rank, varying file.
+		#print t_files # 4, b -> 4, a & 4, c
+		__r, __f = t_files
+		_r = [[__r-1, __f], [__r + 1, __f]]
+
+		squares = _r + _f
+
+		for square in squares:
+			sq = self.get_square(square[0], square[1])
+			if sq:
+				ret.append(sq)
+
+		return ret
+
+	piece_function = knight_moves
+
+r =  KnightMoves()
+r.set_moves('c3',3)
+r1 = r.moves_list
+r1.sort()
+print r1
 
 
 
