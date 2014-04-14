@@ -189,6 +189,9 @@ class KnightMoves(RookMoves):
 
 class PawnMoves(MovesBase):
 	def set_moves(self, square, offset=None):
+		"""
+		PawnMoves: The application of this method is overridden for Pawn Class
+		"""
 		_rank, _file = self.get_rank_file(square)
 		ret = []
 		
@@ -216,6 +219,9 @@ class PawnMoves(MovesBase):
 
 
 	def set_attack_squares(self, square):
+		"""
+		PawnMoves:Needed because for movement squares != attack squares.
+		"""
 		self.set_moves(square)
 		_rank, _file = self.get_rank_file(square)
 		t_ranks = [ self.get_rank_file(sq) for sq in self.get_moves_list()]
