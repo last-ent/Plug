@@ -190,7 +190,7 @@ class KnightMoves(RookMoves):
 
 	piece_function = knight_moves
 
-r =  KnightMoves()
+r =  RookMoves()
 r.set_moves('c3',3)
 r1 = r.moves_list
 r1.sort()

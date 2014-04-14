@@ -4,7 +4,7 @@ import itertools
 import array
 
 class Board(object):
-	def __get_algebraic_board_map(self):
+	def get_algebraic_board_map(self):
 		board_file = list(map(chr,range(ord('a'),ord('h')+1)))
 		board_rank = range(1,9)
 
@@ -24,7 +24,7 @@ class Board(object):
 		Created in anticipation of reading a pgn file.
 		"""
 		ret = {}
-		tup_list = self.__get_algebraic_board_map()
+		tup_list = self.get_algebraic_board_map()
 		#ret = map((ret[i],ret[j] = lambda i,j : j,i), tup_list)
 		for i,j in tup_list:
 			ret[i], ret[j] = j, i

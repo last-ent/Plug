@@ -1,11 +1,12 @@
 from board import Board
 
+
+bi_dict = Board().get_bijective_algebraic_board()
+
 bounds_dict = {
 		'file' : (ord('a'),ord('h')),
 		'rank' : (1,8)
 	}
-
-bi_dict = Board().get_bijective_algebraic_board()
 
 def get_diagnose_dict():
 	return  {
@@ -28,166 +29,167 @@ def diagnose(dct):
 		else:
 			print dct
 
-def check_moves(dct):
-	ret = []
-	keys = dct.keys()
-	for key in keys:
-		ret.extend(map(bi_dict.get, dct[key]))
-	return ret
-
-class MovesClass(object):
+class MovesBase(object):
 	def __init__(self):
-		self.cycle = [
-			('pos', 'forward'),
-			('neg', 'reverse')
-			]
-		self.square_indices = Board().get_bitboard()
-		self.square_notation = Board().get_bijective_algebraic_board()
+		"""
+		Each Piece Class needs to initialize its method: piece_function
+		"""
+		self.cycle = ['forward', 'reverse']
 
-	def within_limits(self,lower_limit, value, upper_limit):
+	def within_limits(self, limit_dict, value):
+		lower_limit = limit_dict[0]
+		upper_limit = limit_dict[1]
 		return lower_limit <= value <= upper_limit
 
-	def get_board(self):
-		return Board().get_bitboard()
-
-	def get_bounds(self):
+	def get_bounds_dict(self):
 		return bounds_dict
 
 	def get_rank_file(self, square):
 		"""
-		a1 -> rank : 1, file : a
+		square : a1 ==> rank : 1, file : a
 		"""
+		
 		_rank = int(square[1])
 		_file = square[0]
 		return _rank, _file
 
 	def get_square(self, _rank, _file):
-		return "%s%s" %(_file, _rank)
+		r_lims = bounds_dict['rank']
+		f_lims = bounds_dict['file']
+		r_bool = self.within_limits(r_lims, _rank)
+		f_bool = self.within_limits(f_lims, ord(_file))
+		if r_bool and f_bool:
+			return "%s%s" %(_file, _rank)
+		else:
+			return False
 
-	def next_rank_file(self, op, _rank, _file, offset):
-		"""
-		self.next_rank & self.next_file should always output unnested list.
-		"""
-		n_ranks = list(self.next_rank(op, _rank, offset))
-		n_files = list(self.next_file(op, _file, offset))
-		return n_ranks, n_files
+	def next_moves(self, args_dict):
+		if args_dict['direction'] == 'reverse':
+				offset = -args_dict['offset']
+		else:
+			offset = +args_dict['offset']
+
+		# [...]
+		return self.piece_function(args_dict, offset)
+
 
 	def set_moves(self, square, offset):
 		"""
-		Has been generalized.
-		The logic needs to be re-written for methods: 
-							next_file, 
-							next_rank, 
-							change_square
-		for each of the pieces.
-		"""
-		sqr_algebraic = self.square_notation[square]
-
-		_rank, _file = self.get_rank_file(sqr_algebraic)
-
-		ret = {}
+		# Forward: Rank:: 1->2, 2->3; File:: a->b, g->h
+		# Reverse: Rank:: 2->1, 6->5; File:: b->a, f->e
+		# self.next_moves should always return unnested list.
 		
-		for op,key in self.cycle:
-			n_ranks, n_files = self.next_rank_file(op, _rank, _file, offset)
+		"""
+		_rank, _file = self.get_rank_file(square)
 
-			## NEEDS REFACTORING
-			ret[key] =[]
-			for n_rank in n_ranks:
-				if n_rank:
-					n_rank_square = self.get_square(n_rank, _file) 
-					ret[key].append(self.square_notation[n_rank_square])
-
-			for n_file in n_files:
-				if n_file:
-					n_file_square = self.get_square(_rank, n_file) 
-					ret[key].append(self.square_notation[n_file_square])
-
-		self.move_dict = ret	
-			# diagnose( {'_rank' : _rank, '_file' : _file, 'n_rank' : n_rank, 'n_file' : n_file,
-			# 'n_file_square': n_file_square, 'n_rank_square' : n_rank_square, 'op': op, 'key': key}) #'r_bool' : rank_in_bounds, 'f_bool': file_in_bounds, 
-
-	def get_flat_list(self):
-		dct = self.move_dict
 		ret = []
-		keys = dct.keys()
-		for key in keys:
-			ret.extend(map(bi_dict.get, dct[key]))
+		args_dict = {   
+			'rank': _rank,
+			'file': _file, 
+			'offset': offset, 
+			}
+		ret = []
+		for  direction in self.cycle:
+			args_dict['direction'] = direction
+			# [...]
+			val = self.next_moves(args_dict)
+			ret.extend(val)
+
+		self.moves_list = ret
+
+
+class RookMoves(MovesBase):
+	def rook_moves(self, args_dict, offset):
+		ret = []
+		_rank, _file = args_dict['rank'], args_dict['file']
+		
+		n_rank =  _rank + offset
+		r_sq = self.get_square(n_rank, _file)
+
+		if r_sq:
+			ret.append(r_sq)
+		
+		n_file = chr( ord(_file)+offset )
+		f_sq = self.get_square(_rank, n_file)
+		
+		if f_sq:
+			ret.append(f_sq)
+
 		return ret
 
-	def check_rof(self, rank_or_file, r_o_f):
-			return ord(rank_or_file) if r_o_f == 'file' else rank_or_file
-
-
-class RookMoves(MovesClass):
-	def change_square(self, op, r_o_f, rank_or_file, offset):
-		"""
-		Changes value of rank_or_file in positive or negative direction by offset.
-		"""
-		## Weird quirk, below line won't work. While in interpreter it works.
-		#return check_rof() +offset if op=='pos' else -offset
-
-		board_val = self.check_rof(rank_or_file, r_o_f) 
-		mod_val =  +offset if op=='pos' else -offset
-		
-		return board_val + mod_val
-		 
-	def next_rank(self, op, _rank, offset):
-		n_rank =  self.change_square(op,'rank', _rank, offset)
-		r_lims = bounds_dict['rank']
-		n_rank = n_rank if self.within_limits(r_lims[0],n_rank,r_lims[1]) else False
-		return [n_rank]
-
-	def next_file(self, op, _file, offset):
-		f_lims = bounds_dict['file']
-		n_file = self.change_square(op, 'file', _file, offset)		
-		n_file =  chr(n_file) if self.within_limits(f_lims[0],n_file,f_lims[1]) else False
-		return [n_file]
-
-
-class BishopMoves(MovesClass):
-	def change_square(self, op, _rank, _file, offset):
-		"""
-		Changes value of rank_or_file in positive or negative direction by offset.
-		op --> decides Forward or Backward.
-		"""
-		#board_val = self.check_rof(rank_or_file, r_o_f) 
-		#mod_val =  +offset if op=='pos' else -offset
-				
-		r_offset = offset
-		if op =='rank': # Reverse
-			r_offset *= -1
+	piece_function = rook_moves
+	
+class BishopMoves(MovesBase):
+	def bishop_moves(self, args_dict, offset):
+		_rank, _file = args_dict['rank'], args_dict['file']
 
 		n_rank = _rank + offset
-		n_files = [  ]
 
-		return board_val + mod_val
-		 
-	def next_rank(self, op, _rank, _file, offset):
-		"""
-		For a Bishop, Rank == Reverse & File == Forward
-		"""
-		n_rank =  self.change_square(op,'rank', _rank, offset)
-		r_lims = bounds_dict['rank']
-		n_rank = n_rank if self.within_limits(r_lims[0],n_rank,r_lims[1]) else False
-		return n_rank
+		_file1 = chr(ord(_file) + offset)
+		_file2 = chr(ord(_file) - offset )
 
-	def next_file(self, op, _rank, _file, offset):
-		"""
-		For a Bishop, Rank == Reverse & File == Forward
-		"""
-		f_lims = bounds_dict['file']
-		n_file = self.change_square('file', _file, offset)		
-		n_file =  chr(n_file) if self.within_limits(f_lims[0],n_file,f_lims[1]) else False
-		return [n_file]
+		sq1 = self.get_square(n_rank, _file1)
+		sq2 = self.get_square(n_rank, _file2)
 
-	def next_rank_file(self, op, _rank, _file, offset):
-		"""
-		self.next_rank & self.next_file should always output unnested list.
-		"""
-		n_ranks = list(self.next_rank(op, _rank, _file, offset))
-		n_files = list(self.next_file(op, _rank, _file, offset))
-		return n_ranks, n_files
+		return sq1, sq2
 
+	piece_function = bishop_moves
+		
+class QueenMoves(RookMoves, BishopMoves):
+	def queen_moves(self, args_dict, offset):
+		rook_moves = self.rook_moves(args_dict, offset)
+		bishop_moves = self.bishop_moves(args_dict, offset)
+		rook_moves.extend(bishop_moves)
+		return rook_moves
+		
+	piece_function = queen_moves
+
+class KingMoves(QueenMoves):
+	def king_moves(self, args_dict, offset):
+		offset = 1 if offset > 0 else -1
+		king_moves = self.queen_moves(args_dict, offset)
+		return king_moves
+
+	piece_function = king_moves
+
+class KnightMoves(RookMoves):
+	def knight_moves(self, args_dict, offset):
+		ret = []
+		offset = 2 if offset > 0 else -2
+		_rank, _file = args_dict['rank'], args_dict['file'] # b2
+
+		rook_moves = self.rook_moves(args_dict, offset)
+		rook_moves = [self.get_rank_file(sq) for sq in rook_moves]
+
+		#[ ( _rank, _file ) ][0]
+		
+		if not rook_moves:
+			return []
+		print rook_moves
+		t_files = [r for r in rook_moves if r[0]==_rank][0] # 2, d
+		t_ranks = [f for f in rook_moves if f[1]==_file][0] # 4, b
+		
+		# Knight moves along file, varying rank.
+		#print t_ranks # 2, d -> 1, d & 3, d
+		__r, __f = t_ranks
+		_f = [[__r, chr(ord(__f) + 1)], [__r, chr(ord(__f) -1)]]
+		
+		
+		# Knight moves along rank, varying file.
+		#print t_files # 4, b -> 4, a & 4, c
+		__r, __f = t_files
+		_r = [[__r-1, __f], [__r + 1, __f]]
+
+		squares = _r + _f
+
+		for square in squares:
+			sq = self.get_square(square[0], square[1])
+			if sq:
+				ret.append(sq)
+
+		return ret
+
+	piece_function = knight_moves
 
 
 #########################################################################
@@ -199,25 +201,29 @@ class MapAllPieceMoves(object):
 
 	def set_board_moves(self):
 		extent = range(1,8)
-		squares = xrange(0,64)
+		squares = Board().get_algebraic_board_map()
+
+		squares = [square[1] for square in squares]
 		self.dict = {}
 
 		for square in squares:
 			self.dict[square] = []
 			for offset in extent:
 				self.Piece.set_moves(square, offset)
-				self.dict[square].extend(self.Piece.get_flat_list())
+				self.dict[square].extend(self.Piece.moves_list)
+
+		
 
 	def get_dict(self):
 		return self.dict 
 
 
 
-r = MapAllPieceMoves(RookMoves())
+r = MapAllPieceMoves(KnightMoves())
 sq = 1
-x = r.get_dict()[sq]
-x.sort()
-print "%s -> %s" %(sq,x)
+x = r.get_dict()
+
+print x['f2']
 
 
 # sq = 35
