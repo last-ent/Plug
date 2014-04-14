@@ -82,20 +82,23 @@ class MovesBase(object):
 		"""
 		_rank, _file = self.get_rank_file(square)
 
-		ret = []
+		ret = set()
 		args_dict = {   
 			'rank': _rank,
 			'file': _file, 
 			'offset': offset, 
 			}
-		ret = []
 		for  direction in self.cycle:
 			args_dict['direction'] = direction
 			# [...]
 			val = self.next_moves(args_dict)
-			ret.extend(val)
-
+			for i in val:
+				ret.add(i)
+		
 		self.moves_list = ret
+
+	def get_moves_list(self):
+		return set(self.moves_list)
 
 
 class RookMoves(MovesBase):
@@ -128,10 +131,9 @@ class BishopMoves(MovesBase):
 		_file1 = chr(ord(_file) + offset)
 		_file2 = chr(ord(_file) - offset )
 
-		sq1 = self.get_square(n_rank, _file1)
-		sq2 = self.get_square(n_rank, _file2)
+		squares = [self.get_square(n_rank, _file1), self.get_square(n_rank, _file2)]
 
-		return sq1, sq2
+		return [ square for square in squares if square ]
 
 	piece_function = bishop_moves
 		
@@ -153,50 +155,44 @@ class KingMoves(QueenMoves):
 	piece_function = king_moves
 
 class KnightMoves(RookMoves):
-	def knight_moves(self, args_dict, offset):
-		ret = []
-		offset = 2 if offset > 0 else -2
-		_rank, _file = args_dict['rank'], args_dict['file'] # b2
+	def set_moves(self, square, offset):
+		"""
+		KnightMoves: The application of this method is overridden for Knight Class
+		"""
+		ret = set()
 
-		rook_moves = self.rook_moves(args_dict, offset)
-		rook_moves = [self.get_rank_file(sq) for sq in rook_moves]
+		offset = 2
 
-		#[ ( _rank, _file ) ][0]
-		
-		if not rook_moves:
-			return []
-		print rook_moves
-		t_files = [r for r in rook_moves if r[0]==_rank][0] # 2, d
-		t_ranks = [f for f in rook_moves if f[1]==_file][0] # 4, b
-		
-		# Knight moves along file, varying rank.
-		#print t_ranks # 2, d -> 1, d & 3, d
-		__r, __f = t_ranks
-		_f = [[__r, chr(ord(__f) + 1)], [__r, chr(ord(__f) -1)]]
-		
-		
-		# Knight moves along rank, varying file.
-		#print t_files # 4, b -> 4, a & 4, c
-		__r, __f = t_files
-		_r = [[__r-1, __f], [__r + 1, __f]]
+		_rank, _file = self.get_rank_file(square)
 
-		squares = _r + _f
-
-		for square in squares:
-			sq = self.get_square(square[0], square[1])
+		t_ranks  = [_rank +2, _rank -2]
+		for r in t_ranks:
+			sq = self.get_square(r, chr(ord(_file) + 1))
 			if sq:
-				ret.append(sq)
+				ret.add(sq)
+			sq = self.get_square(r, chr(ord(_file) -1 ))
+			if sq:
+				ret.add(sq)
 
-		return ret
+		_f = ord(_file)
+		
+		t_files = [ chr(_f + 2), chr(_f - 2)]
+		for f in t_files:
+			sq = self.get_square(_rank +1, f )
+			if sq:
+				ret.add(sq)
+			sq = self.get_square(_rank -1, f)
+			if sq:
+				ret.add(sq)
+		self.moves_list = ret
 
-	piece_function = knight_moves
 
 
 #########################################################################
 
 class MapAllPieceMoves(object):
 	def __init__(self, piece):
-		self.Piece = piece
+		self.piece = piece
 		self.set_board_moves()
 
 	def set_board_moves(self):
@@ -209,31 +205,21 @@ class MapAllPieceMoves(object):
 		for square in squares:
 			self.dict[square] = []
 			for offset in extent:
-				self.Piece.set_moves(square, offset)
-				self.dict[square].extend(self.Piece.moves_list)
-
-		
+				self.piece.set_moves(square, offset)
+				self.dict[square].extend(self.piece.get_moves_list())
+			_moves = self.dict[square]
+			self.dict[square] = list(set(_moves))
 
 	def get_dict(self):
 		return self.dict 
 
 
 
-r = MapAllPieceMoves(KnightMoves())
+r = MapAllPieceMoves(QueenMoves())
 sq = 1
 x = r.get_dict()
 
-print x['f2']
+y =  x['e4']
+y.sort()
+print y
 
-
-# sq = 35
-# by = 3
-# print "%s[+-%s] -> %s" %(bi_dict[sq], by, check_moves(r.get_move(sq, by)))
-
-
-# lat_border = "-----------------------------"*2 
-# lon_border = '|'
-# s = " ... | "*8
-
-# row = "\n||%s|" %(s)[:-1]
-# print lat_border, row*8, la
