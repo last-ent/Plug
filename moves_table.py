@@ -266,12 +266,12 @@ class MapAllPieceMoves(object):
 	def get_dict(self):
 		return self.dict 
 
-r = MapAllPieceMoves(PawnMoves())
-sq = 1
-x = r.get_dict()
+# r = MapAllPieceMoves(PawnMoves())
+# sq = 1
+# x = r.get_dict()
 
-y =  x['e5']
-# z = r.get_piece_ref().get_attack_squares('e2')
-y.sort()
-print y
-# print z
+# y =  x['e5']
+# # z = r.get_piece_ref().get_attack_squares('e2')
+# y.sort()
+# print y
+# # print z
