@@ -187,6 +187,53 @@ class KnightMoves(RookMoves):
 		self.moves_list = ret
 
 
+class PawnMoves(MovesBase):
+	def set_moves(self, square, offset=None):
+		_rank, _file = self.get_rank_file(square)
+		ret = []
+		
+
+		if _rank == 2:
+			# First Double Move.
+			n_ranks = [3,4]
+		else:
+			n_ranks = [_rank + 1]
+
+		for rank in n_ranks:
+			sq = self.get_square(rank, _file)
+			if sq:
+				ret.append(sq)
+
+		#En' Passant
+		if _rank == 5:
+			_f = ord(_file)
+			_f = map(chr, [_f+1, _f-1])
+			for f in _f:
+				sq = self.get_square(6,f)
+				if sq:
+					ret.append(sq)
+		self.moves_list = ret
+
+
+	def set_attack_squares(self, square):
+		self.set_moves(square)
+		_rank, _file = self.get_rank_file(square)
+		t_ranks = [ self.get_rank_file(sq) for sq in self.get_moves_list()]
+		ranks = [ sq[0] for sq in t_ranks]
+		
+		t_file = ord(_file)
+		n_files = map(chr, [t_file +1, t_file -1])
+
+		ret = []
+		for rank in ranks:
+			for file_ in n_files:
+				print rank, file_
+				sq = self.get_square(rank, file_)
+
+				if sq:
+					ret.append(sq)
+		return ret
+
 
 #########################################################################
 
@@ -213,13 +260,12 @@ class MapAllPieceMoves(object):
 	def get_dict(self):
 		return self.dict 
 
-
-
-r = MapAllPieceMoves(QueenMoves())
+r = MapAllPieceMoves(PawnMoves())
 sq = 1
 x = r.get_dict()
 
-y =  x['e4']
+y =  x['e5']
+# z = r.get_piece_ref().get_attack_squares('e2')
 y.sort()
 print y
-
+# print z
