@@ -188,44 +188,52 @@ class KnightMoves(RookMoves):
 
 
 class PawnMoves(MovesBase):
-	def set_moves(self, square, offset=None):
+	"""
+	PawnMoves requires a completely different rule set and hence has,
+	 a different set of method calls and return values as compared to 
+	 other pieces.
+	 Syntax to get moves is as follows:
+	 pobj = PawnMoves()
+	 pobj.set_moves('White') # 'Black'
+	 
+	 moves_list = pobj.get_moves_list
+	 moves_list.keys() -> ['attacks', 'moves', 'colour']
+	 moves_list[key].values() -> list(moves)
+	 moves_list['colour'] -> 'Black' or 'White'
+	"""
+	def set_moves(self, square, colour):
 		"""
 		PawnMoves: The application of this method is overridden for Pawn Class
 		"""
 		_rank, _file = self.get_rank_file(square)
 		ret = []
-		
+		if colour =='White':
+			mod = 1
+		elif colour == 'Black':
+			mod = -1
 
 		if _rank == 2:
 			# First Double Move.
-			n_ranks = [3,4]
+			n_ranks = [i*mod for i in [3,4]]
 		else:
-			n_ranks = [_rank + 1]
+			n_ranks = [_rank + mod*1]
 
 		for rank in n_ranks:
 			sq = self.get_square(rank, _file)
 			if sq:
 				ret.append(sq)
+		self.moves_list = {}
+		self.moves_list['colour'] = colour
+		self.moves_list['moves'] = ret
 
-		#En' Passant
-		if _rank == 5:
-			_f = ord(_file)
-			_f = map(chr, [_f+1, _f-1])
-			for f in _f:
-				sq = self.get_square(6,f)
-				if sq:
-					ret.append(sq)
-		self.moves_list = ret
-
-
-	def set_attack_squares(self, square):
-		"""
-		PawnMoves:Needed because for movement squares != attack squares.
-		"""
-		self.set_moves(square)
+		sqs = self.get_attack_squares(square, ret, colour)
+		self.moves_list['attacks'] = list(sqs)
+		
+	def get_attack_squares(self, square, t_ranks, colour):
 		_rank, _file = self.get_rank_file(square)
-		t_ranks = [ self.get_rank_file(sq) for sq in self.get_moves_list()]
-		ranks = [ sq[0] for sq in t_ranks]
+		#print square, t_ranks, colour, "DSFDS"
+		ranks = [ self.get_rank_file(rank) for rank in t_ranks]
+		ranks = [rank[0] for rank in ranks]
 		
 		t_file = ord(_file)
 		n_files = map(chr, [t_file +1, t_file -1])
@@ -233,12 +241,34 @@ class PawnMoves(MovesBase):
 		ret = []
 		for rank in ranks:
 			for file_ in n_files:
-				print rank, file_
+				
 				sq = self.get_square(rank, file_)
 
 				if sq:
 					ret.append(sq)
+
+		def en_passant(sq):
+			_f = ord(_file)
+			_f = map(chr, [_f+1, _f-1])
+			for f in _f:
+				sq_ = self.get_square(sq,f)
+				if sq:
+					ret.append(sq_)
+		sq = False
+		#En' Passant
+		if _rank == 5 and colour=='White' :
+			sq= 6
+			
+		elif _rank ==4 and colour =='Black':
+			sq = 3
+		
+		if sq:
+			en_passant(sq)
+		
 		return ret
+	def get_moves_list(self):
+		return self.moves_list
+
 
 
 #########################################################################
@@ -265,6 +295,42 @@ class MapAllPieceMoves(object):
 
 	def get_dict(self):
 		return self.dict 
+
+
+class MapPawnMoves(object):
+	def __init__(self):
+		self.colour = 'White'
+		self.piece = PawnMoves()
+	
+	def set_colour(self, c):
+		self.colour = c
+
+	def set_board_moves(self):
+		c = self.colour
+		squares = Board().get_algebraic_board_map()
+		squares = [square[1] for square in squares]
+		self.dict = {}
+
+		for square in squares:
+			self.piece.set_moves(square, colour = c)
+			self.dict[square] = self.piece.get_moves_list()
+	def get_dict(self):
+		return self.dict
+
+p = MapPawnMoves()
+p.set_board_moves()
+
+P_ = p.get_dict()
+
+p.set_colour('Black')
+p.set_board_moves()
+
+p_ = p.get_dict()
+
+print P_['e4'], p_['e4']
+
+print help(PawnMoves)
+
 
 # r = MapAllPieceMoves(PawnMoves())
 # sq = 1
