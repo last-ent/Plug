@@ -51,7 +51,7 @@ possible move list later in the program. A common interface can be
 expected for each class:
 
 
-```
+```python
 #!python
 
 
@@ -72,7 +72,7 @@ class PawnMoves(MovesBase)
 In order to generate the complete move list, MapClasses have been created:
 
 
-```
+```python
 #!python
 
 class MapAllPieceMoves
